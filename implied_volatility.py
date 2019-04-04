@@ -4,16 +4,11 @@ from black_scholes import BlackScholes
 
 
 class NewtonRaphson:
-    def __init__(self, S, K, r, T, q=0.0, type='C', t=0.0, tol=1e-8, nmax=1000):
-        self.__S = S
-        self.__K = K
-        self.__r = r
-        self.__T = T
-        self.__t = t
-        self.__q = q
-        self.__tol = tol
-        self.__type = type
-        self.__nmax = nmax
+    def __init__(self, S, K, r, T, q=0.0, type_='C', t=0.0, tol=1e-8, nmax=1000):
+        self.__S, self.__K, self.__r = S, K, r
+        self.__T, self.__t, self.__q = T, t, q
+        self.__tol, self.__type, self.__nmax = tol, type_, nmax
+
         self.__σinit = self.__σhat()
 
     def __verify(self, V):

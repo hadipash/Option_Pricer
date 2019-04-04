@@ -6,11 +6,9 @@ from scipy.stats import norm
 
 class BlackScholes:
     def __init__(self, S, K, r, T, σ, t=0.0, q=0.0):
-        self.__S = S
-        self.__K = K
-        self.__r = r
+        self.__S, self.__K = S, K
+        self.__r, self.__q = r, q
         self.__Δ = T - t
-        self.__q = q
 
         self.__d1 = (log(S / K) + (r - q) * self.__Δ) / (σ * sqrt(self.__Δ)) + σ * sqrt(self.__Δ) / 2
         self.__d2 = (log(S / K) + (r - q) * self.__Δ) / (σ * sqrt(self.__Δ)) - σ * sqrt(self.__Δ) / 2

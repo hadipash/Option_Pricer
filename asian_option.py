@@ -3,15 +3,10 @@ from scipy.stats import norm
 
 
 class AsianOption:
-    def __init__(self, S, K, r, T, σ, n, m, dt, t=0.0):
-        self.__S = S
-        self.__K = K
-        self.__r = r
-        self.__Δ = T - t
-        self.__σ = σ
-        self.__dt = dt
-        self.__n = n
-        self.__m = m
+    def __init__(self, S, K, r, T, σ, n, m=int(1e4), t=0.0):
+        self.__S, self.__K, self.__r = S, K, r
+        self.__σ, self.__Δ = σ, T - t
+        self.__n, self.__m, self.__dt = n, m, T / n
 
         self.__S_path = []
 
@@ -23,11 +18,11 @@ class AsianOption:
 
     def __gen_paths(self):
         drift = np.exp((self.__r - (self.__σ ** 2) / 2) * self.__dt)
-        gf = drift * np.exp(self.__σ * np.sqrt(self.__dt) * np.random.normal(size=(self.__m, self.__n)))
+        gf = drift * np.exp(self.__σ * np.sqrt(self.__dt) * np.random.normal(size=(self.__m, self.__n + 1)))
 
         for i in range(self.__m):
             self.__S_path.append([self.__S * gf[i][0]])
-            for j in range(1, self.__n):
+            for j in range(1, self.__n + 1):
                 self.__S_path[i].append(self.__S_path[i][j - 1] * gf[i][j])
 
     def __gen_geo_payoff(self):
@@ -46,16 +41,23 @@ class AsianOption:
         self.__gen_geo_payoff()
         self.__gen_arith_payoff()
 
-        # TODO: Check this
-        Z = self.__arith_payoff + self.__θ() * (self.geo_call() - self.__geo_payoff)
+        Z = self.__arith_payoff + self.__θ() * (self.geo_call_cf() - self.__geo_payoff)
         Zmean = np.mean(Z)
         Zstd = np.std(Z)
+        # confidence interval
         confcv = [Zmean - 1.96 * Zstd / np.sqrt(self.__m), Zmean + 1.96 * Zstd / np.sqrt(self.__m)]
 
-    def geo_call(self):
+        return confcv
+
+    def geo_call_cf(self):
         return np.exp(-self.__r * self.__Δ) * (self.__S * np.exp(self.__μhatΔ) * norm.cdf(self.__d1hat) -
                                                self.__K * norm.cdf(self.__d2hat))
 
-    def geo_put(self):
+    def geo_put_cf(self):
         return np.exp(-self.__r * self.__Δ) * (self.__K * norm.cdf(-self.__d2hat) -
                                                self.__S * np.exp(self.__μhatΔ) * norm.cdf(-self.__d1hat))
+
+
+# test, closed-form formula
+ao = AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50)
+print(ao.geo_call_cf())
