@@ -4,7 +4,7 @@ import numpy  as np
 from numpy.random import mtrand
 
  # this is to fullfill requirement of  "reproducible" , to generate a set of random number and call it based on seed and path_num
-Path_random_number='C:/Users/user/Downloads/random_number.npy'
+Path_random_number='./random_number.npy'
 
 
 
