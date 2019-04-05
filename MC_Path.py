@@ -32,7 +32,7 @@ class MC_Path:
         return np.array(self.__S_path) #Get the array results
   
 ao = MC_Path(S=100, K=100, r=0.05, T=5, σ=0.001, n=5,m=7)
-print("MC path test for 7 paths with 5 time steps",ao.get_paths())
+print("MC path test for 7 paths with 5 time steps",ao.get_paths()) 
 
 
 
