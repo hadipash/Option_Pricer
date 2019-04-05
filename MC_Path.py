@@ -10,7 +10,7 @@ import numpy as np
 
 class MC_Path:
 
-    def __init__(self, S, K, r, T, σ, n, m=int(1e4), t=0.0, ControlVariate=False):
+    def __init__(self, S, K, r, T, σ, n, m=int(1e4), t=0.0):
         self.__S, self.__K, self.__r = S, K, r
         self.__σ, self.__Δ = σ, T - t
         self.__n, self.__m, self.__dt = n, m, T / n
