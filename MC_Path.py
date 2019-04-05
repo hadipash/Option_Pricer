@@ -25,7 +25,7 @@ class MC_Path:
         for i in range(self.__m):
             self.__S_path.append([self.__S * gf[i][0]]) # time step =1  OR  i = 0 for all M paths : S(1) = S(0) * exp(rdt - sigma^2 *dt /2) * exp(sigma *sqrt(dt) * dZ)
             for j in range(1, self.__n): #N-1 time steps here
-                self.__S_path[i].append(self.__S_path[i][j - 1] * gf[i][j]) #generate mote calo for M sample 
+                self.__S_path[i].append(self.__S_path[i][j - 1] * gf[i][j]) #generate Whole MC , S(2) to S(N)
 
     def get_paths(self):
         self.__gen_paths() #run the generation first
