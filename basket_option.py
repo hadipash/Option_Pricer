@@ -10,7 +10,7 @@ class BasketOption:
         self.__ρ, self.__Δ = ρ, T - t
 
         self.__B0 = self.__geo_mean([self.__S1, self.__S2], axis=0)
-        σB_sqΔ = self.__Δ * self.__ρ * ((self.__σ1 + self.__σ2) ** 2) / 4
+        σB_sqΔ = self.__Δ * (self.__σ1 ** 2 + 2 * self.__ρ * self.__σ1 * self.__σ2 + self.__σ2 ** 2) / 4
         self.__μBΔ = self.__Δ * (self.__r - (self.__σ1 ** 2 + self.__σ2 ** 2) / 4) + σB_sqΔ / 2
 
         self.__d1hat = (np.log(self.__B0 / self.__K) + self.__μBΔ + σB_sqΔ / 2) / np.sqrt(σB_sqΔ)
