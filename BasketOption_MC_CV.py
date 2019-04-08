@@ -148,7 +148,7 @@ print("Should be like this, will double check tmr:")
 print(bo.arithmetic_standardMC)
 print(bo.control_variate)
 
-print("Should be like this, will double check tmr:")
+print("Should be like this, but sth wrong, will double check tmr:")
 #print(bo.geometric_exact())
 #print(bo.payoff_geometric)
 #print(bo.payoff_arithmetic)
