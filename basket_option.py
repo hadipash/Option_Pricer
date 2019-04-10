@@ -11,7 +11,6 @@ class BasketOption:
         self.__n, self.__m, self.__dt = n, m, T / n
         self.__option_type = option_type.lower()
 
-        self.__B0 = np.exp(np.sum(np.log(self.__S), axis=0) / len(self.__S))
         self.__S_path = []
 
     def __gen_paths(self):
@@ -61,20 +60,20 @@ class BasketOption:
         return confcv
 
     def closed_form(self):
+        B0 = np.exp(np.sum(np.log(self.__S), axis=0) / len(self.__S))
+
         σB_sqΔ = self.__Δ * sum([self.__ρ[i][j] * self.__σ[i] * self.__σ[j]
                                  for i in range(len(self.__σ)) for j in range(len(self.__σ))]) / (len(self.__σ) ** 2)
         μBΔ = self.__Δ * (self.__r - sum([self.__σ[i] ** 2 for i in range(len(self.__σ))]) /
                           (2 * len(self.__σ))) + σB_sqΔ / 2
 
-        d1hat = (np.log(self.__B0 / self.__K) + μBΔ + σB_sqΔ / 2) / np.sqrt(σB_sqΔ)
+        d1hat = (np.log(B0 / self.__K) + μBΔ + σB_sqΔ / 2) / np.sqrt(σB_sqΔ)
         d2hat = d1hat - np.sqrt(σB_sqΔ)
 
         if self.__option_type == 'call':
-            return np.exp(-self.__r * self.__Δ) * (self.__B0 * np.exp(μBΔ) * norm.cdf(d1hat) -
-                                                   self.__K * norm.cdf(d2hat))
+            return np.exp(-self.__r * self.__Δ) * (B0 * np.exp(μBΔ) * norm.cdf(d1hat) - self.__K * norm.cdf(d2hat))
         elif self.__option_type == 'put':
-            return np.exp(-self.__r * self.__Δ) * (self.__K * norm.cdf(-d2hat) -
-                                                   self.__B0 * np.exp(μBΔ) * norm.cdf(-d1hat))
+            return np.exp(-self.__r * self.__Δ) * (self.__K * norm.cdf(-d2hat) - B0 * np.exp(μBΔ) * norm.cdf(-d1hat))
 
     def geo_std_MC(self):
         self.__gen_geo_payoff()
