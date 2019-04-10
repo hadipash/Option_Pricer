@@ -1,47 +1,50 @@
 import numpy as np
 from scipy.stats import norm
 
+np.random.seed(51)
+
 
 class AsianOption:
-    def __init__(self, S, K, r, T, σ, n, m=int(1e4), t=0.0):
+    def __init__(self, S, K, r, T, σ, n, option_type, m=int(1e5), t=0.0):
         self.__S, self.__K, self.__r = S, K, r
         self.__σ, self.__Δ = σ, T - t
         self.__n, self.__m, self.__dt = n, m, T / n
+        self.__option_type = option_type.lower()
 
         self.__S_path = []
 
-        σhat_sqΔ = self.__Δ * (σ ** 2) * (n + 1) * (2 * n + 1) / (6 * n ** 2)
-        self.__μhatΔ = self.__Δ * (r - (σ ** 2) / 2) * (n + 1) / (2 * n) + σhat_sqΔ / 2
-
-        self.__d1hat = (np.log(S / K) + self.__μhatΔ + σhat_sqΔ / 2) / np.sqrt(σhat_sqΔ)
-        self.__d2hat = self.__d1hat - np.sqrt(σhat_sqΔ)
-
     def __gen_paths(self):
-        drift = np.exp((self.__r - (self.__σ ** 2) / 2) * self.__dt)
-        gf = drift * np.exp(self.__σ * np.sqrt(self.__dt) * np.random.normal(size=(self.__m, self.__n + 1)))
-
-        for i in range(self.__m):
-            self.__S_path.append([self.__S * gf[i][0]])
-            for j in range(1, self.__n + 1):
-                self.__S_path[i].append(self.__S_path[i][j - 1] * gf[i][j])
+        if not len(self.__S_path):
+            drift = np.exp((self.__r - (self.__σ ** 2) / 2) * self.__dt)
+            growth_factor = drift * np.exp(self.__σ * np.sqrt(self.__dt) * np.random.randn(self.__m, self.__n))
+            self.__S_path = self.__S * np.cumprod(growth_factor, 1)
 
     def __gen_geo_payoff(self):
+        self.__gen_paths()
         geo_mean = np.exp(np.sum(np.log(self.__S_path), axis=1) / self.__n)
-        self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.max(geo_mean - self.__K, 0)
+        if self.__option_type == 'call':
+            self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(geo_mean - self.__K, 0)
+        elif self.__option_type == 'put':
+            self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(self.__K - geo_mean, 0)
 
     def __gen_arith_payoff(self):
+        self.__gen_paths()
         arith_mean = np.mean(self.__S_path, axis=1)
-        self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.max(arith_mean - self.__K, 0)
+        if self.__option_type == 'call':
+            self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(arith_mean - self.__K, 0)
+        elif self.__option_type == 'put':
+            self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(self.__K - arith_mean, 0)
 
     def __θ(self):
-        return np.cov(self.__arith_payoff, self.__geo_payoff) / np.var(self.__geo_payoff)
+        covXY = np.mean(self.__arith_payoff * self.__geo_payoff) - \
+                np.mean(self.__arith_payoff) * np.mean(self.__geo_payoff)
+        return covXY / np.var(self.__geo_payoff)
 
-    def get_arith_payoff(self):
-        self.__gen_paths()
+    def control_variate(self):
         self.__gen_geo_payoff()
         self.__gen_arith_payoff()
 
-        Z = self.__arith_payoff + self.__θ() * (self.geo_call_cf() - self.__geo_payoff)
+        Z = self.__arith_payoff + self.__θ() * (self.closed_form() - self.__geo_payoff)
         Zmean = np.mean(Z)
         Zstd = np.std(Z)
         # confidence interval
@@ -49,15 +52,38 @@ class AsianOption:
 
         return confcv
 
-    def geo_call_cf(self):
-        return np.exp(-self.__r * self.__Δ) * (self.__S * np.exp(self.__μhatΔ) * norm.cdf(self.__d1hat) -
-                                               self.__K * norm.cdf(self.__d2hat))
+    def closed_form(self):
+        σhat_sqΔ = self.__Δ * (self.__σ ** 2) * (self.__n + 1) * (2 * self.__n + 1) / (6 * self.__n ** 2)
+        μhatΔ = self.__Δ * (self.__r - (self.__σ ** 2) / 2) * (self.__n + 1) / (2 * self.__n) + σhat_sqΔ / 2
 
-    def geo_put_cf(self):
-        return np.exp(-self.__r * self.__Δ) * (self.__K * norm.cdf(-self.__d2hat) -
-                                               self.__S * np.exp(self.__μhatΔ) * norm.cdf(-self.__d1hat))
+        d1hat = (np.log(self.__S / self.__K) + μhatΔ + σhat_sqΔ / 2) / np.sqrt(σhat_sqΔ)
+        d2hat = d1hat - np.sqrt(σhat_sqΔ)
+
+        if self.__option_type == 'call':
+            return np.exp(-self.__r * self.__Δ) * (self.__S * np.exp(μhatΔ) * norm.cdf(d1hat) -
+                                                   self.__K * norm.cdf(d2hat))
+        elif self.__option_type == 'put':
+            return np.exp(-self.__r * self.__Δ) * (self.__K * norm.cdf(-d2hat) -
+                                                   self.__S * np.exp(μhatΔ) * norm.cdf(-d1hat))
+
+    def geo_std_MC(self):
+        self.__gen_geo_payoff()
+        return np.mean(self.__geo_payoff)
+
+    def arith_std_MC(self):
+        self.__gen_arith_payoff()
+        return np.mean(self.__arith_payoff)
 
 
-# test, closed-form formula
-ao = AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50)
-print(ao.geo_call_cf())
+asian_call = AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50, option_type='Call')
+print('Call Options:')
+print('Arithmetic standard MC\t{:f}'.format(asian_call.arith_std_MC()))
+print('Geometric standard MC\t{:f}'.format(asian_call.geo_std_MC()))
+print('Arithmetic MC with Control Variate\t' + str(asian_call.control_variate()))
+print('Geometric closed-form formula\t{:f}'.format(asian_call.closed_form()))
+
+print('\nPut Options')
+asian_put = AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50, option_type='Put')
+print('Arithmetic standard MC\t{:f}'.format(asian_put.arith_std_MC()))
+print('Geometric standard MC\t{:f}'.format(asian_put.geo_std_MC()))
+print('Arithmetic MC with Control Variate\t' + str(asian_put.control_variate()))
