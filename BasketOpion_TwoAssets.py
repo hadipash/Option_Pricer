@@ -69,7 +69,7 @@ class BasketOption:
         # confidence interval
         confcv = [Zmean - 1.96 * Zstd / np.sqrt(self.__m), Zmean + 1.96 * Zstd / np.sqrt(self.__m)]
 
-        return confcv
+        return Zmean
 
     def closed_form(self):
         B0 = np.exp(np.sum(np.log(self.__S), axis=0) / len(self.__S))
