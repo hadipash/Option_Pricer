@@ -38,7 +38,7 @@ class AsianOption:
     def __θ(self):
         covXY = np.mean(self.__arith_payoff * self.__geo_payoff) - \
                 np.mean(self.__arith_payoff) * np.mean(self.__geo_payoff)
-        return covXY / np.var(self.__geo_payoff)
+        return covXY / (np.var(self.__geo_payoff)+1e-20)
 
     def control_variate(self):
         self.__gen_geo_payoff()
