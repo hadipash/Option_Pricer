@@ -16,36 +16,42 @@ class BasketOption:
     def __gen_paths(self):
         if not len(self.__S_path):
             drift = np.exp((self.__r - np.array([self.__σ[i] ** 2 for i in range(len(self.__σ))]) / 2) * self.__dt)
+            np.random.seed(52)
+            randn1 = np.random.randn(self.__m, self.__n)
+            np.random.seed(42)
+            randn2 = np.random.randn(self.__m, self.__n)
+            randn3 = np.add(self.__ρ[0][1] * randn1, np.sqrt(1 - self.__ρ[0][1] ** 2) * randn2)
+            Z = [randn1, randn3]
             for i in range(len(self.__S)):
                 # TODO: add correlation for Z
                 growth_factor = drift[i] * np.exp(np.array(self.__σ[i]) *
-                                                  np.sqrt(self.__dt) * np.random.randn(self.__m, self.__n))
+                                                  np.sqrt(self.__dt) * Z[i])
                 self.__S_path.append(self.__S[i] * np.cumprod(growth_factor, 1))
 
     def __gen_geo_payoff(self):
         self.__gen_paths()
         # first mean by number of steps in simulation, second mean by number of underlying assets
         # output: array of size = number of simulated paths
-        geo_mean = np.exp(np.sum(np.log(self.__S_path), axis=2) / self.__n)
-        geo_mean = np.exp(np.sum(np.log(geo_mean), axis=0) / len(self.__S_path))
+        # geo_mean = np.exp(np.sum(np.log(self.__S_path), axis=2) / self.__n)
+        geo_mean = np.exp(np.sum(np.log(self.__S_path), axis=0) / len(self.__S_path))
         if self.__option_type == 'call':
-            self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(geo_mean - self.__K, 0)
+            self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(geo_mean[:, -1] - self.__K, 0)
         elif self.__option_type == 'put':
-            self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(self.__K - geo_mean, 0)
+            self.__geo_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(self.__K - geo_mean[:, -1], 0)
 
     def __gen_arith_payoff(self):
         self.__gen_paths()
         # in the same way as geometric payoff
-        arith_mean = np.mean(np.mean(self.__S_path, axis=2), axis=0)
+        arith_mean = np.mean(self.__S_path, axis=0)
         if self.__option_type == 'call':
-            self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(arith_mean - self.__K, 0)
+            self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(arith_mean[:, -1] - self.__K, 0)
         elif self.__option_type == 'put':
-            self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(self.__K - arith_mean, 0)
+            self.__arith_payoff = np.exp(-self.__r * self.__Δ) * np.maximum(self.__K - arith_mean[:, -1], 0)
 
     def __θ(self):
         covXY = np.mean(self.__arith_payoff * self.__geo_payoff) - \
                 np.mean(self.__arith_payoff) * np.mean(self.__geo_payoff)
-        return covXY / np.var(self.__geo_payoff)
+        return covXY / (np.var(self.__geo_payoff) + 1e-20)
 
     def control_variate(self):
         self.__gen_geo_payoff()
@@ -84,9 +90,8 @@ class BasketOption:
         return np.mean(self.__arith_payoff)
 
 
-# test, closed-form formula
-basket_call = BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50, option_type='Call')
 print('Call Options:')
+basket_call = BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50, option_type='Call')
 print('Arithmetic standard MC\t{:f}'.format(basket_call.arith_std_MC()))
 print('Geometric standard MC\t{:f}'.format(basket_call.geo_std_MC()))
 print('Arithmetic MC with Control Variate\t' + str(basket_call.control_variate()))
@@ -95,5 +100,5 @@ print('Geometric closed-form formula\t{:f}'.format(basket_call.closed_form()))
 print('\nPut Options')
 basket_put = BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50, option_type='Put')
 print('Arithmetic standard MC\t{:f}'.format(basket_put.arith_std_MC()))
-# print('Geometric standard MC\t{:f}'.format(basket_put.geo_std_MC()))
+print('Geometric standard MC\t{:f}'.format(basket_put.geo_std_MC()))
 print('Arithmetic MC with Control Variate\t' + str(basket_put.control_variate()))

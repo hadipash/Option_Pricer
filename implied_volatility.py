@@ -8,27 +8,26 @@ class NewtonRaphson:
         self.__S, self.__K, self.__r = S, K, r
         self.__T, self.__t, self.__q = T, t, q
         self.__tol, self.__type, self.__nmax = tol, type_, nmax
+        self.__Δ = T - t
 
         self.__σinit = self.__σhat()
 
     def __verify(self, V):
-        if self.__type == 'C' and not (max(self.__S * exp(-self.__q * (self.__T - self.__t)) -
-                                           self.__K * exp(-self.__r * (self.__T - self.__t)), 0) < V <
-                                       self.__S * exp(-self.__q * (self.__T - self.__t))):
+        if self.__type == 'C' and not (max(self.__S * exp(-self.__q * self.__Δ) -
+                                           self.__K * exp(-self.__r * self.__Δ), 0) < V <
+                                       self.__S * exp(-self.__q * self.__Δ)):
             raise ValueError("Arbitrage opportunity!")
 
-        elif self.__type == 'P' and not (max(self.__K * exp(-self.__r * (self.__T - self.__t)) -
-                                             self.__S * exp(-self.__q * (self.__T - self.__t)), 0) < V <
-                                         self.__K * exp(-self.__r * (self.__T - self.__t))):
+        elif self.__type == 'P' and not (max(self.__K * exp(-self.__r * self.__Δ) -
+                                             self.__S * exp(-self.__q * self.__Δ), 0) < V <
+                                         self.__K * exp(-self.__r * self.__Δ)):
             raise ValueError("Arbitrage opportunity!")
 
     def __σhat(self):
-        return sqrt(2 * abs((log(self.__S / self.__K) + (self.__r - self.__q) * (self.__T - self.__t))
-                            / (self.__T - self.__t)))
+        return sqrt(2 * abs((log(self.__S / self.__K) + (self.__r - self.__q) * self.__Δ) / self.__Δ))
 
     def __vega(self, d1):
-        return self.__S * exp(-self.__q * (self.__T - self.__t)) * sqrt(self.__T - self.__t) * \
-               exp(-d1 ** 2 / 2) / sqrt(2 * pi)
+        return self.__S * exp(-self.__q * self.__Δ) * sqrt(self.__Δ) * exp(-d1 ** 2 / 2) / sqrt(2 * pi)
 
     def calc_σ(self, V):
         try:
