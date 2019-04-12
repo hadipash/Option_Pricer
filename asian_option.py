@@ -75,15 +75,21 @@ class AsianOption:
         return np.mean(self.__arith_payoff)
 
 
-asian_call = AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50, option_type='Call')
-print('Call Options:')
-print('Arithmetic standard MC\t{:f}'.format(asian_call.arith_std_MC()))
-print('Geometric standard MC\t{:f}'.format(asian_call.geo_std_MC()))
-print('Arithmetic MC with Control Variate\t' + str(asian_call.control_variate()))
-print('Geometric closed-form formula\t{:f}'.format(asian_call.closed_form()))
+def run_test(num, option):
+    print('\nCase {:d}:'.format(num))
+    print('Arithmetic standard MC\t{:f}'.format(option.arith_std_MC()))
+    print('Arithmetic MC with Control Variate\t' + str(option.control_variate()))
+    print('Geometric closed-form formula\t{:f}'.format(option.closed_form()))
+    print('Geometric standard MC\t{:f}'.format(option.geo_std_MC()))
 
-print('\nPut Options')
-asian_put = AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50, option_type='Put')
-print('Arithmetic standard MC\t{:f}'.format(asian_put.arith_std_MC()))
-print('Geometric standard MC\t{:f}'.format(asian_put.geo_std_MC()))
-print('Arithmetic MC with Control Variate\t' + str(asian_put.control_variate()))
+
+if __name__ == '__main__':
+    print('Put Options')
+    run_test(1, AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50, option_type='Put'))
+    run_test(2, AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=100, option_type='Put'))
+    run_test(3, AsianOption(S=100, K=100, r=0.05, T=3, σ=0.4, n=50, option_type='Put'))
+
+    print('\nCall Options:')
+    run_test(1, AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=50, option_type='Call'))
+    run_test(2, AsianOption(S=100, K=100, r=0.05, T=3, σ=0.3, n=100, option_type='Call'))
+    run_test(3, AsianOption(S=100, K=100, r=0.05, T=3, σ=0.4, n=50, option_type='Call'))
