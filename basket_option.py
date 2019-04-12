@@ -90,15 +90,39 @@ class BasketOption:
         return np.mean(self.__arith_payoff)
 
 
-print('Call Options:')
-basket_call = BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50, option_type='Call')
-print('Arithmetic standard MC\t{:f}'.format(basket_call.arith_std_MC()))
-print('Geometric standard MC\t{:f}'.format(basket_call.geo_std_MC()))
-print('Arithmetic MC with Control Variate\t' + str(basket_call.control_variate()))
-print('Geometric closed-form formula\t{:f}'.format(basket_call.closed_form()))
+def run_test(num, option):
+    print('\nCase {:d}:'.format(num))
+    print('Arithmetic standard MC\t{:f}'.format(option.arith_std_MC()))
+    print('Arithmetic MC with Control Variate\t' + str(option.control_variate()))
+    print('Geometric closed-form formula\t{:f}'.format(option.closed_form()))
+    print('Geometric standard MC\t{:f}'.format(option.geo_std_MC()))
 
-print('\nPut Options')
-basket_put = BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50, option_type='Put')
-print('Arithmetic standard MC\t{:f}'.format(basket_put.arith_std_MC()))
-print('Geometric standard MC\t{:f}'.format(basket_put.geo_std_MC()))
-print('Arithmetic MC with Control Variate\t' + str(basket_put.control_variate()))
+
+if __name__ == '__main__':
+    print('Put Options')
+    run_test(1, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Put'))
+    run_test(2, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.9], [0.9, 1]], n=50,
+                             option_type='Put'))
+    run_test(3, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.1, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Put'))
+    run_test(4, BasketOption(S=[100, 100], K=80, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Put'))
+    run_test(5, BasketOption(S=[100, 100], K=120, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Put'))
+    run_test(6, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.5, 0.5], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Put'))
+
+    print('\nCall Options:')
+    run_test(1, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Call'))
+    run_test(2, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.9], [0.9, 1]], n=50,
+                             option_type='Call'))
+    run_test(3, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.1, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Call'))
+    run_test(4, BasketOption(S=[100, 100], K=80, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Call'))
+    run_test(5, BasketOption(S=[100, 100], K=120, r=0.05, T=3, σ=[0.3, 0.3], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Call'))
+    run_test(6, BasketOption(S=[100, 100], K=100, r=0.05, T=3, σ=[0.5, 0.5], ρ=[[1, 0.5], [0.5, 1]], n=50,
+                             option_type='Call'))
