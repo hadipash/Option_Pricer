@@ -4,23 +4,23 @@ from black_scholes import BlackScholes
 
 
 class NewtonRaphson:
-    def __init__(self, S, K, r, T, q=0.0, type_='C', t=0.0, tol=1e-8, nmax=1000):
+    def __init__(self, S, K, r, T, option_type, q=0.0, t=0.0, tol=1e-8, nmax=1000):
         self.__S, self.__K, self.__r = S, K, r
         self.__T, self.__t, self.__q = T, t, q
-        self.__tol, self.__type, self.__nmax = tol, type_, nmax
-        self.__Δ = T - t
+        self.__tol, self.__nmax, self.__Δ = tol, nmax, T - t
+        self.__option_type = option_type.lower()
 
         self.__σinit = self.__σhat()
 
     def __verify(self, V):
-        if self.__type == 'C' and not (max(self.__S * exp(-self.__q * self.__Δ) -
-                                           self.__K * exp(-self.__r * self.__Δ), 0) < V <
-                                       self.__S * exp(-self.__q * self.__Δ)):
+        if self.__option_type == 'call' and not (max(self.__S * exp(-self.__q * self.__Δ) -
+                                                     self.__K * exp(-self.__r * self.__Δ), 0) < V <
+                                                 self.__S * exp(-self.__q * self.__Δ)):
             raise ValueError("Arbitrage opportunity!")
 
-        elif self.__type == 'P' and not (max(self.__K * exp(-self.__r * self.__Δ) -
-                                             self.__S * exp(-self.__q * self.__Δ), 0) < V <
-                                         self.__K * exp(-self.__r * self.__Δ)):
+        elif self.__option_type == 'put' and not (max(self.__K * exp(-self.__r * self.__Δ) -
+                                                      self.__S * exp(-self.__q * self.__Δ), 0) < V <
+                                                  self.__K * exp(-self.__r * self.__Δ)):
             raise ValueError("Arbitrage opportunity!")
 
     def __σhat(self):
@@ -41,7 +41,7 @@ class NewtonRaphson:
 
         while σdiff >= self.__tol and n < self.__nmax:
             bs = BlackScholes(self.__S, self.__K, self.__r, self.__T, σ, self.__t, self.__q)
-            c = bs.call() if self.__type == 'C' else bs.put()
+            c = bs.call() if self.__option_type == 'call' else bs.put()
 
             if c == V:
                 return σ
